@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="css\chessboard-1.0.0.min.css">
+    </head>
+    <body>
+        <div id="board" style="width: 400px"></div>
+        <p id="correct"></p>
+        
+        <script src="js\jquery-3.6.4.js"></script>
+        <script src="js\chessboard-1.0.0.min.js"></script>
+        <script src="js\chess.js"></script>
+
+        <script>
+            var board = null
+            var puzzleFen = '4r1rk/5K1b/7R/R7/8/8/8/8 w - - 0 1'
+            var solution = ['Rxh7+', 'Kxh7', 'Rh5#']
+            var puzzleIndex = 0
+            var game = new Chess(puzzleFen)
+            var correct = document.getElementById('correct')
+
+            function onDragStart (source, piece, position, orientation) {
+                // do not pick up pieces if the game is over
+                if (game.game_over()) return false
+
+                // only pick up pieces for the side to move
+                if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                    return false
+                }
+            }
+
+            function onDrop (source, target) {
+                console.log(game.turn())
+                // see if the move is legal
+                var move = game.move({
+                    from: source,
+                    to: target,
+                    promotion: 'q' // NOTE: always promote to a queen for example simplicity
+                })
+
+                // illegal move
+                if (move === null) {
+                    return 'snapback'
+                }
+
+                if(move.san == solution[puzzleIndex]) {
+                    correct.innerHTML = "Correct"
+                    if (puzzleIndex == solution.length - 1) {
+                        correct.innerHTML = "Correct, puzzle solved"
+                    }
+                    puzzleIndex++
+                    game.move(solution[puzzleIndex])
+                    puzzleIndex++
+                } else {
+                    correct.innerHTML = "Incorrect"
+                    console.log(game.turn())
+                    return 'snapback'
+                }
+
+                updateStatus()
+            }
+
+            // update the board position after the piece snap
+            // for castling, en passant, pawn promotion
+            function onSnapEnd () {
+                board.position(game.fen())
+            }
+
+            function updateStatus () {
+                var status = ''
+                var moveColor = 'White'
+                if (game.turn() === 'b') {
+                    moveColor = 'Black'
+                }
+
+                // checkmate?
+                if (game.in_checkmate()) {
+                    status = 'Game over, ' + moveColor + ' is in checkmate.'
+                }
+
+                // draw?
+                else if (game.in_draw()) {
+                    status = 'Game over, drawn position'
+                }
+
+                // game still on
+                else {
+                    status = moveColor + ' to move'
+
+                    // check?
+                    if (game.in_check()) {
+                    status += ', ' + moveColor + ' is in check'
+                    }
+                }
+            }
+
+            var config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
+            }
+
+            board = Chessboard('board', config)
+            board.position(puzzleFen)
+
+            updateStatus()
+        </script>
+    </body>
+</html>

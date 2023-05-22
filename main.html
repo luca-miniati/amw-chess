@@ -1,0 +1,364 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Luca's Chess Site</title>
+		<link rel="stylesheet" href = "css/chessboard-1.0.0.css">
+		<style>
+			* {
+				box-sizing: border-box;
+                font-size: 0;
+			}
+			a {
+				display: inline-block;
+				color: #f2f2f2;
+				text-align: center;
+				padding: 10px 16px;
+				text-decoration: none;
+				font-size: 35px;
+				background-color: #2d2e2d;
+			}
+			body {
+				width: 100vw;
+				height: 100vh;
+				background-color: gray;
+				margin: 0;
+			}
+
+			img {
+				display: inline-block;
+			}
+
+			.usernameText {
+				display: inline-block;
+				height: 30px;
+			}
+			
+			#boardBox {
+				width: 50%;
+				height: 70%;
+				/* //border: 2px solid blue; */
+				/* //display: block; */
+				vertical-align: top;
+			}
+			
+			#boardContainer {
+				display: block;
+				margin-left: 10%;
+				margin-right: 10%;
+				/* //border: 4px dashed black;
+				//height: 200px; */
+			}
+			
+			#moveBox {
+				width: 30%;
+				height: 30%;
+				/* //border: 2px solid red;
+				//display: block; */
+				vertical-align: top;
+				background-color: #4b4d4b;
+                overflow: scroll;
+			}
+			
+			button {
+				font-size: medium;
+				margin: 0;
+			}
+			
+			#myBoard {
+				margin-left: auto;
+				margin-right: auto;
+			}
+			
+			@media screen and (orientation: landscape) {
+				#boardBox {
+					width: 70%;
+					height: 85%;
+					display: inline-block;
+					margin: 2% auto;
+				}
+				
+				#moveBox {
+					width: 25%;
+					height: 95%;
+					display: inline-block;
+					overflow: hidden;
+				}
+			}
+
+			
+
+            #moveContainerw {
+                display: inline-block;
+                width: 50%;
+                height: 500px;
+                vertical-align: bottom;
+                text-align: center;
+            }
+
+            #moveContainerb {
+                display: inline-block;
+                width: 50%;
+                height: 500px;
+                vertical-align: bottom;
+                text-align: center;
+            }
+
+            #moveCounter {
+                display: inline-block;
+				background-color: #2d2e2d;
+                width: 5%;
+                height: 95%;
+                vertical-align: bottom;
+                text-align: center;
+            } 
+
+            p {
+                font-size: 30px;
+                color: #ebebeb;
+            }
+
+            #header > p {
+                display: inline;
+            }
+
+            #nameBox {
+                margin: 0;
+                padding: 0;
+                display: inline-block;
+                width: 50%;
+                text-align: center;
+                background-color: #2d2e2d;
+            }
+			#navbar {
+				display: block;
+				background-color: #4b4d4b;
+				height: 5%;
+			}
+			#navbar > p {
+				display: inline;
+				padding: 0 25px;
+				font-size: 40px;
+				margin: auto 0;
+			}
+			@media screen and (max-width: 1500px) {
+				p {
+					font-size: 4px;
+					color: #1bebeb;
+				}
+			}
+		</style>
+	</head>
+	<body onresize="resizeBoard()" onload="resizeBoard()">
+		<div id="navbar">
+			<a>Home</a>
+			<a href="puzzles.html">Puzzles</a>
+			<a>Learn</a>
+		</div>
+		<div id = "boardBox">
+			<div id="boardContainer"><div id="myBoard" style = "width: 98%"></div></div>
+		</div>
+        <div id = "moveCounter"></div>
+        <div id = "moveBox">
+            <div id="header">
+                <div id="nameBox">
+					<img src="white.png" height="20px" style="margin-right: 10px">
+                    <p class="usernameText">username</p>
+                </div>
+                <div id="nameBox">
+					<img src="black.png" height="20px" style="margin-right: 10px">
+                    <p class="usernameText">username</p>
+                </div>
+            </div>
+            <div id = "moveContainerw"></div>
+            <div id = "moveContainerb"></div>
+        </div>
+            
+	
+		<script src ="js/jquery-3.6.4.js"></script>
+		<script src = "js/chessboard-1.0.0.js"></script>
+		<script src = "js/chess.js"></script>
+		<script>
+			// NOTE: this example uses the chess.js library:
+			// https://github.com/jhlywa/chess.js
+
+			var board = null
+			var game = new Chess()
+            var moveCount = 0
+            var move
+			var $status = $('#status')
+			var $fen = $('#fen')
+			var $pgn = $('#pgn')
+			
+			var redBox = document.getElementById("boardBox");
+			
+			//myBoard.style.display = "inline-block";
+
+			function onDragStart (source, piece, position, orientation) {
+				// do not pick up pieces if the game is over
+				if (game.game_over()) return false
+
+				// only pick up pieces for the side to move
+				if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+						(game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+					return false
+				}
+								// get list of possible moves for this square
+				var moves = game.moves({
+					square: source,
+					verbose: true
+				})
+
+				// exit if there are no moves available for this square
+				if (moves.length === 0) return
+
+				// highlight the square they moused over
+				greySquare(source)
+
+				// highlight the possible squares for this piece
+				for (var i = 0; i < moves.length; i++) {
+					greySquare(moves[i].to)
+				}
+			}
+
+			function onDrop (source, target) {
+				removeGreySquares()
+				// see if the move is legal
+				var move = game.move({
+					from: source,
+					to: target,
+					promotion: 'q' // NOTE: always promote to a queen for example simplicity
+				})
+				
+				
+
+				// illegal move
+				if (move === null) {
+                    return 'snapback'
+                } else {
+					if (moveCount % 2 == 0) {
+                        let str = ((moveCount/2)+1).toString().concat(".")
+                        let elem = document.createElement('p')
+                        elem.innerHTML = str
+                        document.getElementById("moveCounter").appendChild(elem)
+                    }
+
+                    moveCount += 1;
+
+                    let san = move.san
+                    let elem = document.createElement('p')
+					elem.setAttribute("id", moveCount.toString())
+                    elem.innerHTML = san
+                    document.getElementById("moveContainer"+move.color).appendChild(elem)
+                }
+
+				updateStatus()
+			}
+
+			// update the board position after the piece snap
+			// for castling, en passant, pawn promotion
+			function onSnapEnd () {
+				board.position(game.fen())
+			}
+
+			var whiteSquareGrey = '#a9a9a9'
+			var blackSquareGrey = '#696969'
+
+			function removeGreySquares () {
+				$('#myBoard .square-55d63').css('background', '')
+			}
+
+			function greySquare (square) {
+				var $square = $('#myBoard .square-' + square)
+
+				var background = whiteSquareGrey
+				if ($square.hasClass('black-3c85d')) {
+					background = blackSquareGrey
+				}
+
+				$square.css('background', background)
+			}
+
+			function updateStatus () {
+				var status = ''
+
+				var moveColor = 'White'
+				if (game.turn() === 'b') {
+					moveColor = 'Black'
+				}
+
+				// checkmate?
+				if (game.in_checkmate()) {
+					status = 'Game over, ' + moveColor + ' is in checkmate.'
+				}
+
+				// draw?
+				else if (game.in_draw()) {
+					status = 'Game over, drawn position'
+				}
+
+				// game still on
+				else {
+					status = moveColor + ' to move'
+
+					// check?
+					if (game.in_check()) {
+						status += ', ' + moveColor + ' is in check'
+					}
+				}
+
+				$status.html(status)
+				$fen.html(game.fen())
+				$pgn.html(game.pgn())
+
+				if (moveCount > 0) {
+					style = document.getElementById(moveCount.toString()).style
+					style.display = "inline-block"
+					style.backgroundColor = "#2d2e2d"
+					style.verticalAlign = "bottom"
+					style.padding = "10px 20px"
+					style.margin = "20px 0px 0px 0px"
+					style.borderRadius = "10px";
+
+
+					if (moveCount > 1) {
+						style = document.getElementById((moveCount-1).toString()).style
+						style.display = "block"
+						style.backgroundColor = null
+						style.padding = null
+						style.margin = "30px 0px 0px 0px"
+
+					}
+				}
+			}
+
+			var config = {
+				draggable: true,
+				position: 'start',
+				onDragStart: onDragStart,
+				onDrop: onDrop,
+				onSnapEnd: onSnapEnd
+			}
+
+			board = Chessboard('myBoard', config);
+			updateStatus();
+			
+			function resizeBoard() {
+				if(parseFloat(getComputedStyle(boardBox).width) > parseFloat(getComputedStyle(boardBox).height)) {
+					boardContainer.style.width = getComputedStyle(boardBox).height;
+				} else {
+					boardContainer.style.width = getComputedStyle(boardBox).width;
+				}
+				board.resize();
+				
+				document.getElementById("moveCounter").style.paddingTop = document.getElementById("header").offsetHeight.toString()+"px";
+
+			}
+			
+			function checkWidth() {
+				console.log(parseFloat(getComputedStyle(boardContainer).width));
+				//boardContainer.style.height = getComputedStyle(boardContainer).width;
+			}
+			
+		</script>	
+	</body>
+</html>
