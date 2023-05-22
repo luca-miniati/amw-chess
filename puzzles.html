@@ -134,25 +134,28 @@
 				background-color: #4b4d4b;
 				height: 5%;
 			}
-			#navbar > p {
+			a > p {
+				font-size: 20px;
 				display: inline;
-				padding: 0 25px;
-				font-size: 40px;
-				margin: auto 0;
-			}
-			@media screen and (max-width: 1500px) {
-				p {
-					font-size: 4px;
-					color: #1bebeb;
-				}
+				vertical-align: top;
 			}
 		</style>
 	</head>
 	<body onresize="resizeBoard()" onload="resizeBoard()">
 		<div id="navbar">
-			<a>Home</a>
-			<a href="page01.html">Puzzles</a>
-			<a>Learn</a>
+			<a>
+				<p>Home</p>
+			</a>
+			<a href="puzzles.html">
+				<p>
+					Puzzles
+				</p>
+			</a>
+			<a>
+				<p>
+					Learn
+				</p>
+			</a>
 		</div>
 		<div id = "boardBox">
 			<div id="boardContainer"><div id="myBoard" style = "width: 98%"></div></div>
@@ -190,11 +193,13 @@
             var correct = document.getElementById('correct')
 			var redBox = document.getElementById("boardBox")
             var moveCount = 0
+			var globalSquare
 
 			
 			//myBoard.style.display = "inline-block";
 
 			function onDragStart (source, piece, position, orientation) {
+				globalSquare = source
 				// do not pick up pieces if the game is over
 				if (game.game_over()) return false
 
@@ -238,20 +243,37 @@
                 } else {
                     if(move.san == solution[puzzleIndex]) {
                         correct.innerHTML = "Correct"
+						greenSquare(target)
                         if (puzzleIndex == solution.length - 1) {
                             correct.innerHTML = "Correct, puzzle solved"
+
+							let san = move.san
+							let elem = document.createElement('p')
+							elem.setAttribute("id", moveCount.toString())
+							elem.innerHTML = san
+							document.getElementById("moveContainer"+move.color).appendChild(elem)
+
+							moveCount++
+							if (moveCount % 2 == 0) {
+								let str = ((moveCount/2)+1).toString().concat(".")
+								let elem = document.createElement('p')
+								elem.innerHTML = str
+								document.getElementById("moveCounter").appendChild(elem)
+                    		}
+							return
                         }
-                        puzzleIndex++
-                        move = game.move(solution[puzzleIndex])
-                        console.log(solution[puzzleIndex])
-                        console.log(move)
-                        let san = move.san
+						let san = move.san
                         let elem = document.createElement('p')
                         elem.setAttribute("id", moveCount.toString())
                         elem.innerHTML = san
                         document.getElementById("moveContainer"+move.color).appendChild(elem)
 
                         puzzleIndex++
+
+                        move = game.move(solution[puzzleIndex])
+
+                        puzzleIndex++
+
                     } else {
                         correct.innerHTML = "Incorrect"
                         console.log(game.turn())
@@ -285,8 +307,13 @@
 
 			var whiteSquareGrey = '#a9a9a9'
 			var blackSquareGrey = '#696969'
+			var bothColorsGreenSquare = '#7ebd81'
 
 			function removeGreySquares () {
+				$('#myBoard .square-55d63').css('background', '')
+			}
+
+			function removeGreenSquares () {
 				$('#myBoard .square-55d63').css('background', '')
 			}
 
@@ -299,6 +326,12 @@
 				}
 
 				$square.css('background', background)
+			}
+
+			function greenSquare (square) {
+				var $square = $('#myBoard .square-' + square)
+
+				$square.css('background', bothColorsGreenSquare)
 			}
 
 			function updateStatus () {
