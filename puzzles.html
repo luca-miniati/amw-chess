@@ -193,7 +193,6 @@
             var correct = document.getElementById('correct')
 			var redBox = document.getElementById("boardBox")
             var moveCount = 0
-			var globalSquare
 
 			
 			//myBoard.style.display = "inline-block";
@@ -276,7 +275,8 @@
 
                     } else {
                         correct.innerHTML = "Incorrect"
-                        console.log(game.turn())
+                        redSquare(target)
+						setTimeout(removeGreenSquares, 500)
                         return 'snapback'
                     }
 
@@ -308,6 +308,7 @@
 			var whiteSquareGrey = '#a9a9a9'
 			var blackSquareGrey = '#696969'
 			var bothColorsGreenSquare = '#7ebd81'
+			var bothColorsRedSquare = '#c96b6b'
 
 			function removeGreySquares () {
 				$('#myBoard .square-55d63').css('background', '')
@@ -332,6 +333,12 @@
 				var $square = $('#myBoard .square-' + square)
 
 				$square.css('background', bothColorsGreenSquare)
+			}
+
+			function redSquare (square) {
+				var $square = $('#myBoard .square-' + square)
+
+				$square.css('background', bothColorsRedSquare)
 			}
 
 			function updateStatus () {
