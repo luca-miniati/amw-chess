@@ -139,6 +139,7 @@
 				display: inline;
 				vertical-align: top;
 			}
+
 		</style>
 	</head>
 	<body onresize="resizeBoard()" onload="resizeBoard()">
@@ -174,9 +175,7 @@
             </div>
             <div id = "moveContainerw"></div>
             <div id = "moveContainerb"></div>
-        </div>
-        <p id="correct"></p>
-            
+        </div>            
 	
 		<script src ="js/jquery-3.6.4.js"></script>
 		<script src = "js/chessboard-1.0.0.js"></script>
@@ -188,6 +187,7 @@
 			for (i = 0; i < elem.length; i++) {
 				elem[i].style.height = navbarHeight
 			}
+
 			// NOTE: this example uses the chess.js library:
 			// https://github.com/jhlywa/chess.js
 
@@ -231,6 +231,8 @@
 				}
 			}
 
+			function takeback() { game.undo(); board.position(game.fen()); updateStatus(); }
+
 			function onDrop (source, target) {
 				removeGreySquares()
 				// see if the move is legal
@@ -247,10 +249,8 @@
                     return 'snapback'
                 } else {
                     if(move.san == solution[puzzleIndex]) {
-                        correct.innerHTML = "Correct"
 						greenSquare(target)
                         if (puzzleIndex == solution.length - 1) {
-                            correct.innerHTML = "Correct, puzzle solved"
 
 							let san = move.san
 							let elem = document.createElement('p')
@@ -280,7 +280,7 @@
                         puzzleIndex++
 
                     } else {
-                        correct.innerHTML = "Incorrect"
+						takeback()
                         redSquare(target)
 						setTimeout(removeGreenSquares, 500)
                         return 'snapback'
@@ -417,7 +417,7 @@
 				}
 				board.resize();
 				
-				document.getElementById("moveCounter").style.paddingTop = document.getElementById("header").offsetHeight.toString()+"px";
+				// document.getElementById("moveCounter").style.paddingTop = document.getElementById("header").offsetHeight.toString()+"px";
 
 			}
 			
